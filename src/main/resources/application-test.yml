@@ -11,8 +11,7 @@ spring:
     type: com.alibaba.druid.pool.DruidDataSource
 
  ##redis配置
-  data:
-    redis:
+  redis:
       host: 192.168.88.130
       port: 6379
       password: 123456
@@ -24,7 +23,7 @@ spring:
           time-between-eviction-runs: 3000
 
     ##rabbitmq配置
-    rabbitmq:
+  rabbitmq:
       host: 192.168.88.130
       port: 5672
       username: admin

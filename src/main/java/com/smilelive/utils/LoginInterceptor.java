@@ -11,11 +11,13 @@ import javax.servlet.http.HttpServletResponse;
 public class LoginInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        log.info ("request-->{}",request.getSession ().getId ());
         //查看ThreadLocal中是否有用户
         User user =UserHolder.getUser ();
         if(user==null){
             //没有用户,拦截
             response.setStatus (301);
+            log.info ("301->{}",request.getSession ().getId ());
             return false;
         }
         //放行
