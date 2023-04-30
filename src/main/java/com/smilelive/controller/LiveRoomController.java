@@ -1,6 +1,7 @@
 package com.smilelive.controller;
 
 import com.smilelive.entity.LiveRoom;
+import com.smilelive.handler.MediaStreamHandler;
 import com.smilelive.service.LiveRoomService;
 import com.smilelive.utils.MyFileUtil;
 import com.smilelive.utils.Result;
@@ -52,6 +53,14 @@ public class LiveRoomController {
     public Result saveCover(@RequestParam("file") MultipartFile file,@RequestParam Long id){
         log.info("saveCover -->{}",id);
         return liveRoomService.saveCover(file,id);
+    }
+    @RequestMapping("getAll")
+    public Result getAll(){
+        return liveRoomService.getAll();
+    }
+    @RequestMapping("queryById")
+    public Result queryById(@RequestParam Long id){
+        return liveRoomService.queryById(id);
     }
 
 }

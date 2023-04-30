@@ -6,6 +6,7 @@ import com.smilelive.utils.Result;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface LiveRoomService extends IService<LiveRoom> {
+
     Result currentLiveRoom();
 
     Result saveLiveRoom(LiveRoom liveRoom);
@@ -13,4 +14,8 @@ public interface LiveRoomService extends IService<LiveRoom> {
     Result createLiveRoom();
 
     Result saveCover(MultipartFile file, Long id);
+
+    Result getAll();
+
+    Result queryById(Long id);
 }

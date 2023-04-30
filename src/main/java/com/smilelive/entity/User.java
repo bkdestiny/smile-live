@@ -17,5 +17,4 @@ public class User {
     private String sex;
     private LocalDate birthday;
     private LocalDateTime created;
-    private Long liveroomId;
 }

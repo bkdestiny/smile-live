@@ -10,11 +10,13 @@ import com.smilelive.entity.LiveRoom;
 import com.smilelive.utils.DealProcessStream;
 import com.smilelive.utils.RedisContent;
 import com.smilelive.utils.Result;
+import lombok.Data;
 import org.springframework.boot.autoconfigure.cache.CacheProperties;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +33,12 @@ public class MediaStreamHandler {
     @OnEvent ("publishStream")
     public void publishStream(SocketIOClient client, AckRequest ack,long id){
         try {
+            Process p = map.get (id);
+            if(p!=null){
+                p.destroy ();
+                map.remove (p);
+            }
+            System.out.println ("id -->"+id);
             //UUID sessionId=client.getSessionId ();
             //["-fflags","nobuffer","-i","-","-vcodec","libx264","-f","flv","rtmp://192.168.88.130/myapp/s"]
             //String command="ffmpeg -fflags nobuffer -i - -vcodec libx264 -f flv rtmp://192.168.88.130/myapp/s";
@@ -47,6 +55,7 @@ public class MediaStreamHandler {
             list.add ("-f");
             list.add ("flv");
             String url="rtmp://192.168.88.130/myapp/"+id;
+            System.out.println (url);
             list.add (url);
             ProcessBuilder processBuilder = new ProcessBuilder ();
             processBuilder.command (list);
@@ -78,6 +87,7 @@ public class MediaStreamHandler {
             map.put (id,process);
             ack.sendAckData (Result.ok ());
         }catch (Exception e){
+            ack.sendAckData (Result.fail ("服务器异常"));
             e.printStackTrace ();
         }
     }
@@ -85,6 +95,7 @@ public class MediaStreamHandler {
     public void downLive(SocketIOClient client,AckRequest ack,long id){
         try {
             //删除进程
+            map.get (id).destroy ();
             map.remove (id);
             ack.sendAckData (Result.ok ());
         }catch (Exception e){
@@ -92,26 +103,31 @@ public class MediaStreamHandler {
         }
     }
     @OnEvent ("streamData")
-    public void streamData(SocketIOClient client, AckRequest ackRequest, StreamData data){
+    public void streamData(SocketIOClient client, AckRequest ack, StreamData data){
         boolean channelOpen = client.isChannelOpen ();
         if(!channelOpen){
             System.out.println ();
         }
-        System.out.println ("b -->"+data.getData ().length);
+        //System.out.println ("b -->"+data.getData ().length+"id-->"+data.getId ());
         //System.out.println ("b -->"+b.length);
         UUID sessionId=client.getSessionId ();
         try {
             //1.获取Process
             Process process=map.get (data.getId ());
             if(process==null){
-                ackRequest.sendAckData (Result.fail ("进程关闭"));
+                ack.sendAckData (Result.fail ("进程关闭"));
             }
             //推流
             OutputStream outputStream = process.getOutputStream ();
             outputStream.write (data.getData ());
-            ackRequest.sendAckData (Result.ok ());
-        }catch (Exception e){
+            ack.sendAckData (Result.ok ());
+        }catch (IOException e){
+            ack.sendAckData (Result.fail ("服务器异常"));
             e.printStackTrace ();
         }
+    }
+
+    public static Map<Long, Process> getMap() {
+        return map;
     }
 }

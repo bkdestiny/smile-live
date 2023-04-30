@@ -10,11 +10,19 @@ import org.apache.tomcat.jni.Proc;
 @TableName("liveroom")
 public class LiveRoom {
     private long id;
+    @TableField("user_id")
+    private long userId;
     private String title;
     private String cover;
     private String classtify;
     @TableField(exist = false)
     private long viewer;
     @TableField(exist = false)
-    private long isLive;
+    private boolean isLive=false;
+    @TableField(exist = false)
+    private String username;
+    @TableField(exist = false)
+    private String nickname;
+    @TableField(exist = false)
+    private String avatar;
 }

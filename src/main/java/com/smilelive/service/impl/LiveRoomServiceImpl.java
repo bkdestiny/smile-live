@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mchange.lang.LongUtils;
 import com.smilelive.entity.LiveRoom;
 import com.smilelive.entity.User;
+import com.smilelive.handler.MediaStreamHandler;
 import com.smilelive.mapper.LiveRoomMapper;
 import com.smilelive.mapper.UserMapper;
 import com.smilelive.service.LiveRoomService;
@@ -19,6 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class LiveRoomServiceImpl extends ServiceImpl<LiveRoomMapper, LiveRoom> implements LiveRoomService {
@@ -26,22 +30,22 @@ public class LiveRoomServiceImpl extends ServiceImpl<LiveRoomMapper, LiveRoom> i
     private UserService userService;
     @Resource
     private MyFileUtil myFileUtil;
+    @Resource
+    private MediaStreamHandler mediaStreamHandler;
     @Override
     public Result currentLiveRoom() {
-        Long liveroomId= UserHolder.getUser ().getLiveroomId ();
-        if(liveroomId==null){
+        LiveRoom liveroom = query ().eq ("user_id", UserHolder.getUser ().getId ()).one ();
+        if(liveroom==null){
             //未开通直播间
             return createLiveRoom ();
-        }
-        LiveRoom liveroom = getById (liveroomId);
-        if(liveroom==null){
-            return Result.fail ("您还未开通直播间");
         }
         return Result.ok (liveroom);
     }
     @Transactional
     public Result createLiveRoom(){
-        if(UserHolder.getUser ().getLiveroomId ()!=null){
+        //查询直播间是否存在
+        LiveRoom query = query ().eq ("user_id", UserHolder.getUser ().getId ()).one ();
+        if(query!=null){
             return Result.fail ("您已经创建过直播间");
         }
         Long userId=UserHolder.getUser ().getId ();
@@ -77,15 +81,36 @@ public class LiveRoomServiceImpl extends ServiceImpl<LiveRoomMapper, LiveRoom> i
         myFileUtil.delImage (MyFileUtil.COVER_PATH,oldCover);
         return Result.ok ();
     }
+
+    @Override
+    public Result getAll() {
+        Map<Long, Process> map = MediaStreamHandler.getMap ();
+        List<LiveRoom> list = getBaseMapper ().getLiveRooms ();
+        Iterator<LiveRoom> iterator = list.iterator ();
+        while(iterator.hasNext ()){
+            LiveRoom next = iterator.next ();
+            if(map.get (next.getId ())!=null){
+                next.setLive (true);
+            }
+        }
+        return Result.ok (list);
+    }
+
+    @Override
+    public Result queryById(Long id) {
+        LiveRoom liveRoom = getBaseMapper ().queryById (id);
+        if(liveRoom==null){
+            return Result.fail ("获取直播间信息失败");
+        }
+        if(MediaStreamHandler.getMap ().get (id)!=null){
+            liveRoom.setLive (true);
+        }
+        return Result.ok (liveRoom);
+    }
+
     @Override
     @Transactional
     public Result saveLiveRoom(LiveRoom liveRoom) {
-        Long userId=UserHolder.getUser ().getId ();
-        Long liveroomId=UserHolder.getUser ().getLiveroomId ();
-        if(liveroomId==null||liveroomId==0){
-            //直播间不存在，创建直播间
-            return createLiveRoom ();
-        }
         //直播间存在，更新直播间信息
         boolean isUpdate = updateById (liveRoom);
         if(!isUpdate){

@@ -8,6 +8,7 @@ import com.smilelive.dto.LiveChatMessage;
 import com.smilelive.entity.LiveRoom;
 import com.smilelive.utils.RedisContent;
 import com.smilelive.utils.Result;
+import lombok.Data;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 

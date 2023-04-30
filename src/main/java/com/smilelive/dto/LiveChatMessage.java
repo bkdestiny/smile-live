@@ -6,7 +6,7 @@ import lombok.Data;
 public class LiveChatMessage {
     private long userId;
     private long roomId;
-    private String username;
+    private String nickname;
     private String content;
     private String type;
 }

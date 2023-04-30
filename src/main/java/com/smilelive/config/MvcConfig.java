@@ -20,7 +20,9 @@ public class MvcConfig implements WebMvcConfigurer {
                 //放行的路径
                 "/user/loginByPassword",
                 "/user/avatar",
-                "/liveroom/cover"
+                "/liveroom/cover",
+                "/liveroom/getAll",
+                "/liveroom/queryById"
         ).order (1);
         //添加拦截器 refreshToken
         registry.addInterceptor (new RefreshTokenInterceptor (stringRedisTemplate))
