@@ -4,6 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.corundumstudio.socketio.AckRequest;
 import com.corundumstudio.socketio.SocketIOClient;
+import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.annotation.OnEvent;
 import com.smilelive.dto.StreamData;
 import com.smilelive.entity.LiveRoom;
@@ -11,6 +12,7 @@ import com.smilelive.utils.DealProcessStream;
 import com.smilelive.utils.RedisContent;
 import com.smilelive.utils.Result;
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.cache.CacheProperties;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
@@ -27,6 +29,8 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 public class MediaStreamHandler {
+    @Autowired
+    private SocketIOServer socketIOServer;
     private static Map<Long,Process> map=new ConcurrentHashMap<> ();
     @Resource
     private StringRedisTemplate stringRedisTemplate;

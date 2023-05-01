@@ -2,11 +2,14 @@ package com.smilelive.config;
 
 import com.corundumstudio.socketio.SocketConfig;
 import com.corundumstudio.socketio.SocketIOServer;
-import com.smilelive.handler.LiveRoomHandler;
+import com.corundumstudio.socketio.Transport;
+import com.corundumstudio.socketio.annotation.SpringAnnotationScanner;
+import com.smilelive.handler.ChatHandler;
 import com.smilelive.handler.MediaStreamHandler;
 import com.smilelive.handler.SocketIOHandler;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.Resource;
@@ -19,14 +22,14 @@ import javax.annotation.Resource;
  * @Version 1.0
  **/
 @Configuration
-public class SocketIOConfig implements InitializingBean {
+public class SocketIOConfig{
 
-   @Resource
+/*   @Resource
     private SocketIOHandler socketIOHandler;
     @Resource
     private MediaStreamHandler mediaStreamHandler;
     @Resource
-    private LiveRoomHandler liveRoomHandler;
+    private ChatHandler chatHandler;*/
     @Value("${socketio.host}")
     private String host;
 
@@ -50,10 +53,8 @@ public class SocketIOConfig implements InitializingBean {
 
     @Value("${socketio.pingInterval}")
     private int pingInterval;
-
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
+    @Bean("socketIOServer")
+    public SocketIOServer socketIOServer() throws Exception {
         SocketConfig socketConfig = new SocketConfig();
         socketConfig.setReuseAddress(true);
         socketConfig.setTcpNoDelay(true);
@@ -74,14 +75,19 @@ public class SocketIOConfig implements InitializingBean {
         configuration.setPingTimeout(pingTimeout);
         // Ping消息间隔（毫秒），默认25秒。客户端向服务器发送一条心跳消息间隔
         configuration.setPingInterval(pingInterval);
-
+        //configuration.setTransports (Transport.WEBSOCKET);//指定传输协议为websocket
         SocketIOServer socketIOServer = new SocketIOServer(configuration);
         //添加事件监听器
-        socketIOServer.addListeners(socketIOHandler);
+/*        socketIOServer.addListeners(socketIOHandler);
         socketIOServer.addListeners (mediaStreamHandler);
-        socketIOServer.addListeners (liveRoomHandler);
+        socketIOServer.addListeners (chatHandler);*/
         //启动SocketIOServer
         socketIOServer.start();
         System.out.println("SocketIO启动完毕");
+        return socketIOServer;
+    }
+    @Bean
+    public SpringAnnotationScanner springAnnotationScanner(SocketIOServer socketServer) {
+        return new SpringAnnotationScanner(socketServer);
     }
 }
