@@ -16,34 +16,35 @@ import java.io.FileFilter;
 @Component
 @Slf4j
 public class MyFileUtil {
-    public static final String AVATAR_PATH="data/avatar/";
-    public static final String COVER_PATH="data/cover/";
-
+    public static final String resourcePath="E:\\JavaProjectSpace\\smile-live-resource\\";
+    public static final String AVATAR_PATH=resourcePath+"data\\avatar\\";
+    public static final String COVER_PATH=resourcePath+"data\\cover\\";
+    public static final String DEFAULT_IMAGE_PATH=resourcePath+"data\\default\\smile-world.jpg";
     public String saveImage(MultipartFile file,String beginPath){
         try{
             String filename=IdUtil.fastSimpleUUID ()+"."+FileNameUtil.getSuffix (file.getOriginalFilename ());
             //生成文件路径
-            String filePath=beginPath+filename;
+            String path=beginPath+filename;
             //创建头像文件
-            File imageFile = FileUtil.touch (filePath);
+            File imageFile = FileUtil.touch (path);
             log.info ("avatarFile-->{}",imageFile.getPath ());
             //写入头像文件
             BufferedOutputStream out = FileUtil.getOutputStream (imageFile);
             out.write (file.getBytes ());
             out.flush ();
             out.close ();
-            return filename;
+            return path;
         }catch (Exception e){
             e.printStackTrace ();
             return null;
         }
     }
-    public byte[] getImage(String beginPath,String filename){
+    public byte[] getImage(String filepath){
         try{
-            String path=beginPath+"/"+filename;
+            String path=resourcePath+filepath;
             File file = FileUtil.file (path);
             if(file==null){
-                return null;
+                throw new Exception ();
             }
             BufferedInputStream input = FileUtil.getInputStream (file);
             byte[] b=new byte[1024*1024*2];
@@ -51,14 +52,23 @@ public class MyFileUtil {
             input.close ();
             return b;
         }catch (Exception e){
-            e.printStackTrace ();
-            return null;
+            try{
+                BufferedInputStream input = FileUtil.getInputStream (MyFileUtil.DEFAULT_IMAGE_PATH);
+                byte[] b=new byte[1024*1024*2];
+                input.read (b);
+                input.close ();
+                return b;
+            }catch (Exception e2){
+               return null;
+            }
         }
     }
-    public void delImage(String beginPath,String filename){
+    public void delImage(String filepath){
         try{
-            String path=beginPath+"/"+filename;
-            FileUtil.del (path);
+            String path=resourcePath+filepath;
+            if(FileUtil.exist (path)&&FileUtil.isFile (path)) {
+                FileUtil.del (path);
+            }
         }catch (Exception e){
             e.printStackTrace ();
         }

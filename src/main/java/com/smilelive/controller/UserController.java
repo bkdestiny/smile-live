@@ -40,21 +40,4 @@ public class UserController {
     public Result saveAvatar(@RequestParam("file") MultipartFile file,@RequestParam Long id){
         return userService.saveAvatar(file,id);
     }
-    @GetMapping("avatar")
-    public void getAvatar(HttpServletResponse resp,@RequestParam String filename) {
-        try{
-            log.info ("id1-->{}",filename);
-             byte[] b= myFileUtil.getImage (MyFileUtil.AVATAR_PATH,filename);
-             if(b==null){
-                 return;
-             }
-             log.info("b-->",b.length);
-            ServletOutputStream out = resp.getOutputStream ();
-            out.write (b);
-            out.flush ();
-            out.close ();
-         }catch (Exception e){
-            e.printStackTrace ();
-        }
-    }
 }

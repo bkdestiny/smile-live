@@ -32,23 +32,6 @@ public class LiveRoomController {
     public Result createLiveRoom(){
         return liveRoomService.createLiveRoom();
     }
-    @GetMapping("cover")
-    public Result cover(HttpServletResponse response,@RequestParam String filename){
-        try{
-            log.info("cover filename->{}",filename);
-            byte[] b = myFileUtil.getImage (MyFileUtil.COVER_PATH, filename);
-            if(b==null){
-                throw new Exception ();
-            }
-            ServletOutputStream out = response.getOutputStream ();
-            out.write (b);
-            out.flush ();
-            out.close ();
-            return Result.ok ();
-        }catch (Exception e){
-            return Result.fail ("获取图片失败");
-        }
-    }
     @RequestMapping("saveCover")
     public Result saveCover(@RequestParam("file") MultipartFile file,@RequestParam Long id){
         log.info("saveCover -->{}",id);

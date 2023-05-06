@@ -12,6 +12,7 @@ public class User {
     private String username;
     private String password;
     private String nickname;
+    private Integer wallet;
     private String phone;
     private String avatar;
     private String sex;

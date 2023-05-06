@@ -101,21 +101,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public Result saveAvatar(MultipartFile file, Long id) {
         //保存头像文件
-        String filename= myFileUtil.saveImage (file, MyFileUtil.AVATAR_PATH);
-        //返回保存的文件名
-        if(filename==null||StrUtil.isBlank (filename)){
-            //保存失败
-            return Result.fail ("修改头像失败");
+            String path = myFileUtil.saveImage (file, MyFileUtil.AVATAR_PATH);
+        try {
+            //返回保存的文件名
+            if (path == null || StrUtil.isBlank (path)) {
+                //保存失败
+                throw new Exception ();
+            }
+            //保存成功,保存文件名到数据库
+            Long userId = UserHolder.getUser ().getId ();
+            String oldAvatar = query ().eq ("id", userId).one ().getAvatar ();
+            boolean update = update ().eq ("id", userId).set ("avatar", path).update ();
+            if (!update) {
+                    throw new Exception ();
+            }
+            //删除旧头像文件
+            myFileUtil.delImage (oldAvatar);
+            return Result.ok ();
+        }catch (Exception e){
+            //异常，删除保存的新头像文件
+            myFileUtil.delImage (path);
+            return Result.fail ("保存头像失败");
         }
-        //保存成功,保存文件名到数据库
-        Long userId=UserHolder.getUser ().getId ();
-        String oldAvatar=query ().eq ("id",userId).one ().getAvatar ();
-        boolean update = update ().eq ("id", userId).set ("avatar", filename).update ();
-        if(!update){{
-            return Result.fail ("修改头像失败");
-        }}
-        //删除旧头像文件
-        myFileUtil.delImage (MyFileUtil.AVATAR_PATH,oldAvatar);
-        return Result.ok ();
     }
 }
