@@ -20,4 +20,8 @@ public class GiftController {
     public Result sendGift(@RequestBody GiftRecord giftRecord){
         return giftService.sendGift(giftRecord);
     }
+    @GetMapping("queryGiftRankingByDesc")
+    public Result queryGiftRankingByDesc(@RequestParam Long id){
+        return giftService.queryGiftRankingByDesc(id);
+    }
 }

@@ -30,13 +30,13 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
         String key=RedisContent.TOKEN_KEY+token;
         //不为空，从redis查询用户是否存在
         String json=stringRedisTemplate.opsForValue ().get (key);
-        User userDTO= JSONUtil.toBean (json,User.class);
-        if(userDTO==null){
+        User user= JSONUtil.toBean (json,User.class);
+        if(user==null){
             //不存在，放行
             return true;
         }
         //存在，保存用户到Threadlocal
-        UserHolder.saveUser (userDTO);
+        UserHolder.saveUser (user);
         //刷新token在redis的有效期
         stringRedisTemplate.expire (key,RedisContent.TOKEN_TTL, TimeUnit.MINUTES);
         //放行

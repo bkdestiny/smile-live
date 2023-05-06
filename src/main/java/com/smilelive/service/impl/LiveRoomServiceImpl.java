@@ -86,7 +86,8 @@ public class LiveRoomServiceImpl extends ServiceImpl<LiveRoomMapper, LiveRoom> i
             myFileUtil.delImage (path );
             return Result.fail ("修改封面失败");
         }
-        myFileUtil.delImage (path);
+        //最后删除旧封面文件
+        myFileUtil.delImage (oldCover);
         return Result.ok ();
     }
     //获取当前直播间观看人数
@@ -102,7 +103,7 @@ public class LiveRoomServiceImpl extends ServiceImpl<LiveRoomMapper, LiveRoom> i
         while(iterator.hasNext ()){
             LiveRoom next = iterator.next ();
             //获取当前直播间是否正在直播
-            if(map.get (next.getId ())!=null){
+            if(map.get (next.getUserId ())!=null){
                 next.setLive (true);
             }
             //获取当前直播间观看人数

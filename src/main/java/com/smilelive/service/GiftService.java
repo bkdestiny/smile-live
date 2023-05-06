@@ -10,4 +10,6 @@ public interface GiftService extends IService<Gift> {
     Result queryByValueAsc();
 
     Result sendGift(GiftRecord giftRecord);
+
+    Result queryGiftRankingByDesc(Long userId);
 }

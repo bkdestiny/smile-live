@@ -18,4 +18,9 @@ public class User {
     private String sex;
     private LocalDate birthday;
     private LocalDateTime created;
+    /*
+    *   礼物榜价值
+    * */
+    @TableField(exist = false)
+    private Integer giftValue;
 }

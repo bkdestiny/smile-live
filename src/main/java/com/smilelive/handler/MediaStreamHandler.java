@@ -12,6 +12,7 @@ import com.smilelive.utils.DealProcessStream;
 import com.smilelive.utils.RedisContent;
 import com.smilelive.utils.Result;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.cache.CacheProperties;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -28,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @Component
+@Slf4j
 public class MediaStreamHandler {
     @Autowired
     private SocketIOServer socketIOServer;
@@ -37,6 +39,7 @@ public class MediaStreamHandler {
     @OnEvent ("publishStream")
     public void publishStream(SocketIOClient client, AckRequest ack,long id){
         try {
+            log.info(id+"开启直播");
             Process p = map.get (id);
             if(p!=null){
                 p.destroy ();

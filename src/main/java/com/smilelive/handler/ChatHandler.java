@@ -24,10 +24,12 @@ public class ChatHandler {
     private SocketIOServer socketIOServer;
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+    /*加入直播间*/
     @OnEvent ("joinLiveRoom")
     public void joinLiveRoom(SocketIOClient client, AckRequest ack,Long id){
         client.joinRoom (LIVEROOM_KEY+id);
     }
+    /*用户发送聊天消息*/
     @OnEvent ("sendChatMessage")
     public void sendChatMessage(SocketIOClient client, AckRequest ack, GroupMsg msg){
         msg.setType ("USER");
@@ -38,6 +40,7 @@ public class ChatHandler {
             iterator.next ().sendEvent ("liveroomChat",msg);
         }
     }
+    /*礼物消息*/
     @OnEvent ("sendGiftMessage")
     public void sendGiftMessage(SocketIOClient client, AckRequest ack, GiftRecord record){
         String content=" 送出了 "+record.getCount ()+" x ";
@@ -49,6 +52,7 @@ public class ChatHandler {
             iterator.next ().sendEvent ("liveroomChat",msg);
         }
     }
+    /*离开直播间*/
     @OnEvent ("leaveLiveRoom")
     public void leaveLiveRoom(SocketIOClient client,AckRequest ack,Long id){
         client.leaveRoom (LIVEROOM_KEY+id);

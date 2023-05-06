@@ -13,4 +13,5 @@ public class RedisContent {
     public static final String LIVEROOM_ONLINE_KEY="sl:liveroom:online:";
     public static final Long LIVEROOM_ONLINE_TTL=20L;
 
+    public static final String GIFT_RANKING_KEY="sl:gift:ranking:";
 }
