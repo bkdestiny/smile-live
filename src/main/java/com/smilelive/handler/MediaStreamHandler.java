@@ -1,5 +1,6 @@
 package com.smilelive.handler;
 
+import cn.hutool.core.collection.ConcurrentHashSet;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.corundumstudio.socketio.AckRequest;
@@ -8,6 +9,7 @@ import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.annotation.OnEvent;
 import com.smilelive.dto.StreamData;
 import com.smilelive.entity.LiveRoom;
+import com.smilelive.entity.LiveRoomFollow;
 import com.smilelive.utils.DealProcessStream;
 import com.smilelive.utils.RedisContent;
 import com.smilelive.utils.Result;
@@ -21,10 +23,8 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -34,6 +34,7 @@ public class MediaStreamHandler {
     @Autowired
     private SocketIOServer socketIOServer;
     private static Map<Long,Process> map=new ConcurrentHashMap<> ();
+    private static Map<Long, LocalDateTime> liveMap=new ConcurrentHashMap<> ();
     @Resource
     private StringRedisTemplate stringRedisTemplate;
     @OnEvent ("publishStream")
@@ -133,8 +134,26 @@ public class MediaStreamHandler {
             e.printStackTrace ();
         }
     }
+    @OnEvent ("startLive")
+    public void startLive(SocketIOClient client, AckRequest ack,Long userId){
+        if(liveMap.get (userId)!=null){
+            ack.sendAckData (Result.fail ("正在直播中"));
+            return;
+        }
+        liveMap.put (userId,LocalDateTime.now ());
+        ack.sendAckData (Result.ok ());
+    }
+    @OnEvent ("stopLive")
+    public void stopLive(SocketIOClient client, AckRequest ack,Long userId){
+        liveMap.remove (userId);
+        ack.sendAckData (Result.ok ());
+    }
 
     public static Map<Long, Process> getMap() {
         return map;
+    }
+
+    public static Map<Long, LocalDateTime> getLiveMap() {
+        return liveMap;
     }
 }

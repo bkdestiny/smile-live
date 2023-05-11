@@ -7,14 +7,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 
 public interface UserService extends IService<User> {
-    Result loginByPassword(User user);
+    Result loginByPassword(HttpServletRequest req,User user);
 
     Result currentUser(HttpServletRequest req);
 
     Result updateUserInfo(User userInfo);
 
     Result saveAvatar(MultipartFile file, Long id);
+
+    Result logout(HttpServletRequest req);
+
+    void loginCaptcha(HttpServletRequest req,HttpServletResponse resp) throws Exception;
 }

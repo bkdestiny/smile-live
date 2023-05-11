@@ -17,15 +17,13 @@ import javax.servlet.http.HttpServletResponse;
 @RequestMapping("liveroom")
 public class LiveRoomController {
     @Resource
-    private MyFileUtil myFileUtil;
-    @Resource
     private LiveRoomService liveRoomService;
     @RequestMapping("currentLiveRoom")
     public Result currentLiveRoom(){
         return liveRoomService.currentLiveRoom();
     }
     @PostMapping("saveLiveRoom")
-    public Result saveLiveRoom(LiveRoom liveRoom){
+    public Result saveLiveRoom(@RequestBody LiveRoom liveRoom){
         return liveRoomService.saveLiveRoom(liveRoom);
     }
     @PostMapping("createLiveRoom")
@@ -45,5 +43,8 @@ public class LiveRoomController {
     public Result queryById(@RequestParam Long id){
         return liveRoomService.queryById(id);
     }
-
+    @RequestMapping("queryByUserId")
+    public Result queryByUserId(@RequestParam("userId") Long userId){
+        return liveRoomService.queryByUserId(userId);
+    }
 }

@@ -25,4 +25,8 @@ public class LiveRoom {
     private String nickname;
     @TableField(exist = false)
     private String avatar;
+    @TableField(exist = false)
+    private Integer followCount;
+    @TableField(exist = false)
+    private Boolean follow=false;
 }

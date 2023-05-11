@@ -11,4 +11,6 @@ public interface LiveRoomMapper extends BaseMapper<LiveRoom> {
     List<LiveRoom> getLiveRooms();
     @Select("select l.*,u.username,u.nickname,u.avatar from liveroom l inner join user u on l.user_id=u.id where l.id=#{id}")
     LiveRoom queryById(Long id);
+    @Select("select l.*,u.username,u.nickname,u.avatar from liveroom l inner join user u on l.user_id=u.id where l.user_id=#{userId}")
+    LiveRoom queryByUserId(Long userId);
 }

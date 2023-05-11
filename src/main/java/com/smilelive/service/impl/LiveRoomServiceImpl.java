@@ -7,26 +7,30 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.corundumstudio.socketio.SocketIOServer;
 import com.mchange.lang.LongUtils;
 import com.smilelive.entity.LiveRoom;
+import com.smilelive.entity.LiveRoomFollow;
 import com.smilelive.entity.User;
 import com.smilelive.handler.MediaStreamHandler;
 import com.smilelive.mapper.LiveRoomMapper;
 import com.smilelive.mapper.UserMapper;
+import com.smilelive.service.LiveRoomFollowService;
 import com.smilelive.service.LiveRoomService;
 import com.smilelive.service.UserService;
 import com.smilelive.utils.MyFileUtil;
 import com.smilelive.utils.Result;
 import com.smilelive.utils.UserHolder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import static com.smilelive.handler.ChatHandler.LIVEROOM_KEY;
-
+@Slf4j
 @Service
 public class LiveRoomServiceImpl extends ServiceImpl<LiveRoomMapper, LiveRoom> implements LiveRoomService {
     @Resource
@@ -37,6 +41,8 @@ public class LiveRoomServiceImpl extends ServiceImpl<LiveRoomMapper, LiveRoom> i
     private MediaStreamHandler mediaStreamHandler;
     @Resource
     private SocketIOServer socketIOServer;
+    @Resource
+    private LiveRoomFollowService liveRoomFollowService;
     /*获取当前用户的直播间*/
     @Override
     public Result currentLiveRoom() {
@@ -95,9 +101,23 @@ public class LiveRoomServiceImpl extends ServiceImpl<LiveRoomMapper, LiveRoom> i
         int size = socketIOServer.getRoomOperations (LIVEROOM_KEY + liveRoom.getId ()).getClients ().size ();
         liveRoom.setViewer (size);
     }
+    private void pushFollowCount(LiveRoom liveRoom){
+        Long count = liveRoomFollowService.query ().eq ("live_user_id", liveRoom.getUserId ()).count ();
+        liveRoom.setFollowCount (count.intValue ());
+    }
+    private void pushIsFollow(LiveRoom liveRoom){
+        if(UserHolder.getUser ()==null){
+            return;
+        }
+        Long count = liveRoomFollowService.query ().eq ("user_id", UserHolder.getUser ().getId ()).eq ( "live_user_id", liveRoom.getUserId ()).count ();
+        if(count>0){
+            log.info("ll");
+            liveRoom.setFollow (true);
+        }
+    }
     @Override
     public Result getAll() {
-        Map<Long, Process> map = MediaStreamHandler.getMap ();
+        Map<Long, LocalDateTime> map = MediaStreamHandler.getLiveMap ();
         List<LiveRoom> list = getBaseMapper ().getLiveRooms ();
         Iterator<LiveRoom> iterator = list.iterator ();
         while(iterator.hasNext ()){
@@ -114,16 +134,36 @@ public class LiveRoomServiceImpl extends ServiceImpl<LiveRoomMapper, LiveRoom> i
     /*根据Id获取直播间信息*/
     @Override
     public Result queryById(Long id) {
-        LiveRoom liveroom = getBaseMapper ().queryById (id);
-        if(liveroom==null){
+        LiveRoom liveRoom = getBaseMapper ().queryById (id);
+        if(liveRoom==null){
             return Result.fail ("获取直播间信息失败");
         }
         if(MediaStreamHandler.getMap ().get (id)!=null){
-            liveroom.setLive (true);
+            liveRoom.setLive (true);
         }
         //获取当前直播间观看人数
-        pushViewer (liveroom);
-        return Result.ok (liveroom);
+        pushViewer (liveRoom);
+
+        return Result.ok (liveRoom);
+    }
+
+    @Override
+    public Result queryByUserId(Long userId) {
+        LiveRoom liveRoom = getBaseMapper ().queryByUserId (userId);
+        if(liveRoom==null){
+            return Result.fail ("获取直播间信息失败");
+        }
+        if(MediaStreamHandler.getLiveMap ().get (userId)!=null){
+            liveRoom.setLive (true);
+        }
+        //获取当前直播间观看人数
+        pushViewer (liveRoom);
+        //获取当前直播间关注人数
+        pushFollowCount (liveRoom);
+        //当前用户是否关注该直播间
+        pushIsFollow(liveRoom);
+        log.info("l-->{}",liveRoom);
+        return Result.ok (liveRoom);
     }
 
     @Override
@@ -131,7 +171,10 @@ public class LiveRoomServiceImpl extends ServiceImpl<LiveRoomMapper, LiveRoom> i
     /*更新直播间信息*/
     public Result saveLiveRoom(LiveRoom liveRoom) {
         //直播间存在，更新直播间信息
-        boolean isUpdate = updateById (liveRoom);
+        boolean isUpdate = update().
+                eq ("user_id",liveRoom.getUserId ()).
+                set ("title",liveRoom.getTitle ()).
+                set ("classtify",liveRoom.getClasstify ()).update ();
         if(!isUpdate){
             return Result.fail ("修改直播间信息失败");
         }

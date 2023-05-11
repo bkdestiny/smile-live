@@ -25,8 +25,8 @@ public class UserController {
     @Resource
     private MyFileUtil myFileUtil;
     @PostMapping("loginByPassword")
-    public Result loginByPassword(@RequestBody User loginForm){
-        return userService.loginByPassword (loginForm);
+    public Result loginByPassword(HttpServletRequest req,@RequestBody User loginForm){
+        return userService.loginByPassword (req,loginForm);
     }
     @GetMapping("currentUser")
     public Result currentUser(HttpServletRequest req){
@@ -39,5 +39,14 @@ public class UserController {
     @PostMapping("saveAvatar")
     public Result saveAvatar(@RequestParam("file") MultipartFile file,@RequestParam Long id){
         return userService.saveAvatar(file,id);
+    }
+    @PostMapping("logout")
+    public Result logout(HttpServletRequest req){
+        return userService.logout(req);
+    }
+    @GetMapping("loginCaptcha")
+    public void loginCaptcha(HttpServletRequest req,HttpServletResponse resp) throws Exception {
+        log.info("sessionId-->{}",req.getSession ().getId ());
+        userService.loginCaptcha(req,resp);
     }
 }

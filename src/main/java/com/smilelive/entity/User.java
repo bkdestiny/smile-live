@@ -23,4 +23,9 @@ public class User {
     * */
     @TableField(exist = false)
     private Integer giftValue;
+    /*
+    * 验证码
+    * */
+    @TableField(exist = false)
+    private String captcha;
 }

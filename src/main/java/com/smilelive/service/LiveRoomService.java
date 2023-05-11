@@ -18,4 +18,6 @@ public interface LiveRoomService extends IService<LiveRoom> {
     Result getAll();
 
     Result queryById(Long id);
+
+    Result queryByUserId(Long userId);
 }

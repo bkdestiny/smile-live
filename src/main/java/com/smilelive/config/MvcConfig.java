@@ -19,9 +19,11 @@ public class MvcConfig implements WebMvcConfigurer {
         registry.addInterceptor (new LoginInterceptor ()).excludePathPatterns (
                 //放行的路径
                 "/user/loginByPassword",
+                "/user/loginCaptcha",
                 "/file/image",
                 "/liveroom/getAll",
-                "/liveroom/queryById",
+                "/liveroom/queryByUserId",
+                "/liveroom/queryCountByUserId",
                 "/gift/**"
         ).order (1);
         //添加拦截器 refreshToken

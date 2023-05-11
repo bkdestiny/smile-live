@@ -1,6 +1,8 @@
 package com.smilelive.service.impl;
 
 import cn.hutool.cache.CacheUtil;
+import cn.hutool.captcha.CaptchaUtil;
+import cn.hutool.captcha.GifCaptcha;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.IdUtil;
@@ -20,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.concurrent.TimeUnit;
 @Service
 @Slf4j
@@ -31,7 +34,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Resource
     private MyFileUtil myFileUtil;
     @Override
-    public Result loginByPassword(User loginForm) {
+    public Result loginByPassword(HttpServletRequest req,User loginForm) {
+        String sessionId=req.getSession ().getId ();
+        String captchaKey=RedisContent.CAPTCHA_KEY+sessionId;
+        String captcha = stringRedisTemplate.opsForValue ().get (captchaKey);
+        if(!captcha.equals (loginForm.getCaptcha ())){
+            return Result.fail ("验证码错误");
+        }
         User user=null;
         /*
         * 判断是用户名还是手机号登录
@@ -123,5 +132,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             myFileUtil.delImage (path);
             return Result.fail ("保存头像失败");
         }
+    }
+
+    @Override
+    public Result logout(HttpServletRequest req) {
+        String token = req.getHeader ("authorization");
+        String tokenKey=RedisContent.TOKEN_KEY+token;
+        Boolean delete = stringRedisTemplate.delete (tokenKey);
+        return Result.ok ();
+    }
+
+    @Override
+    public void loginCaptcha(HttpServletRequest req,HttpServletResponse resp) throws Exception{
+            /*hutool生产验证码*/
+            GifCaptcha gifCaptcha = CaptchaUtil.createGifCaptcha (300, 100, 6);
+            //sessionId作为key保存到redis 5分钟
+            String captchaKey = RedisContent.CAPTCHA_KEY + req.getSession ().getId ();
+            stringRedisTemplate.opsForValue ().set (captchaKey, gifCaptcha.getCode (),RedisContent.CAPTCHA_TTL,TimeUnit.MINUTES);
+            gifCaptcha.write (resp.getOutputStream ());
     }
 }
