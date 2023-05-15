@@ -24,7 +24,9 @@ public class MvcConfig implements WebMvcConfigurer {
                 "/liveroom/getAll",
                 "/liveroom/queryByUserId",
                 "/liveroom/queryCountByUserId",
-                "/gift/**"
+                "/gift/**",
+                "/pay/**",
+                "/rune/**"
         ).order (1);
         //添加拦截器 refreshToken
         registry.addInterceptor (new RefreshTokenInterceptor (stringRedisTemplate))

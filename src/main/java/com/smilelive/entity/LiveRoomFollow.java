@@ -23,7 +23,7 @@ public class LiveRoomFollow {
     @TableField(exist = false)
     private String classtify;
     @TableField(exist = false)
-    private boolean isLive=false;
+    private boolean isLive;
     public LiveRoomFollow(){}
     public LiveRoomFollow(Long userId, Long liveUserId) {
         this.userId = userId;

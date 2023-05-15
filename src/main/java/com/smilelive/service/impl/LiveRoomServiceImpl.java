@@ -15,10 +15,9 @@ import com.smilelive.mapper.UserMapper;
 import com.smilelive.service.LiveRoomFollowService;
 import com.smilelive.service.LiveRoomService;
 import com.smilelive.service.UserService;
-import com.smilelive.utils.MyFileUtil;
-import com.smilelive.utils.Result;
-import com.smilelive.utils.UserHolder;
+import com.smilelive.utils.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,6 +27,7 @@ import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static com.smilelive.handler.ChatHandler.LIVEROOM_KEY;
 @Slf4j
@@ -38,11 +38,13 @@ public class LiveRoomServiceImpl extends ServiceImpl<LiveRoomMapper, LiveRoom> i
     @Resource
     private MyFileUtil myFileUtil;
     @Resource
-    private MediaStreamHandler mediaStreamHandler;
-    @Resource
     private SocketIOServer socketIOServer;
     @Resource
     private LiveRoomFollowService liveRoomFollowService;
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+    @Resource
+    private CacheClient cacheClient;
     /*获取当前用户的直播间*/
     @Override
     public Result currentLiveRoom() {
@@ -146,10 +148,12 @@ public class LiveRoomServiceImpl extends ServiceImpl<LiveRoomMapper, LiveRoom> i
 
         return Result.ok (liveRoom);
     }
-
+    /*根据用户Id获取直播间*/
     @Override
     public Result queryByUserId(Long userId) {
-        LiveRoom liveRoom = getBaseMapper ().queryByUserId (userId);
+        //先从redis获取
+        String liveRoomKey= RedisContent.LIVEROOM_KEY+userId;
+        LiveRoom liveRoom = cacheClient.queryWithPassThrough (RedisContent.LIVEROOM_KEY, userId, LiveRoom.class, this.getBaseMapper ()::queryByUserId, RedisContent.LIVEROOM_TTL, TimeUnit.DAYS);
         if(liveRoom==null){
             return Result.fail ("获取直播间信息失败");
         }
@@ -162,12 +166,10 @@ public class LiveRoomServiceImpl extends ServiceImpl<LiveRoomMapper, LiveRoom> i
         pushFollowCount (liveRoom);
         //当前用户是否关注该直播间
         pushIsFollow(liveRoom);
-        log.info("l-->{}",liveRoom);
         return Result.ok (liveRoom);
     }
 
     @Override
-    @Transactional
     /*更新直播间信息*/
     public Result saveLiveRoom(LiveRoom liveRoom) {
         //直播间存在，更新直播间信息
@@ -178,6 +180,10 @@ public class LiveRoomServiceImpl extends ServiceImpl<LiveRoomMapper, LiveRoom> i
         if(!isUpdate){
             return Result.fail ("修改直播间信息失败");
         }
+        //TODO 使用Redisson的读写锁完善双写一致性
+        //修改成功,第二次删除缓存 双写一致性
+        String liveroomKey=RedisContent.LIVEROOM_KEY+liveRoom.getUserId ();
+        stringRedisTemplate.delete (liveroomKey);
         return Result.ok ();
     }
 }

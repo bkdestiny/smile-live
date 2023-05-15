@@ -18,7 +18,7 @@ public class LiveRoom {
     @TableField(exist = false)
     private long viewer;
     @TableField(exist = false)
-    private boolean isLive=false;
+    private boolean isLive;
     @TableField(exist = false)
     private String username;
     @TableField(exist = false)
