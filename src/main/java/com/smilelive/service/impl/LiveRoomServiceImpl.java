@@ -98,15 +98,17 @@ public class LiveRoomServiceImpl extends ServiceImpl<LiveRoomMapper, LiveRoom> i
         myFileUtil.delImage (oldCover);
         return Result.ok ();
     }
-    //获取当前直播间观看人数
+    //获取直播间观看人数
     private void pushViewer(LiveRoom liveRoom){
         int size = socketIOServer.getRoomOperations (LIVEROOM_KEY + liveRoom.getId ()).getClients ().size ();
         liveRoom.setViewer (size);
     }
+    //获取直播间关注人数
     private void pushFollowCount(LiveRoom liveRoom){
         Long count = liveRoomFollowService.query ().eq ("live_user_id", liveRoom.getUserId ()).count ();
         liveRoom.setFollowCount (count.intValue ());
     }
+    //当前用户是否关注该直播间
     private void pushIsFollow(LiveRoom liveRoom){
         if(UserHolder.getUser ()==null){
             return;
@@ -117,6 +119,7 @@ public class LiveRoomServiceImpl extends ServiceImpl<LiveRoomMapper, LiveRoom> i
             liveRoom.setFollow (true);
         }
     }
+    //获取所有直播间
     @Override
     public Result getAll() {
         Map<Long, LocalDateTime> map = MediaStreamHandler.getLiveMap ();
@@ -152,8 +155,9 @@ public class LiveRoomServiceImpl extends ServiceImpl<LiveRoomMapper, LiveRoom> i
     @Override
     public Result queryByUserId(Long userId) {
         //先从redis获取
-        String liveRoomKey= RedisContent.LIVEROOM_KEY+userId;
-        LiveRoom liveRoom = cacheClient.queryWithPassThrough (RedisContent.LIVEROOM_KEY, userId, LiveRoom.class, this.getBaseMapper ()::queryByUserId, RedisContent.LIVEROOM_TTL, TimeUnit.DAYS);
+        LiveRoom liveRoom = cacheClient.
+                queryWithPassThrough (RedisContent.LIVEROOM_KEY, userId, LiveRoom.class,
+                        this.getBaseMapper ()::queryByUserId, RedisContent.LIVEROOM_TTL, TimeUnit.DAYS);
         if(liveRoom==null){
             return Result.fail ("获取直播间信息失败");
         }

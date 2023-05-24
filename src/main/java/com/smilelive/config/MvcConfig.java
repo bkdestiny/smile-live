@@ -25,7 +25,6 @@ public class MvcConfig implements WebMvcConfigurer {
                 "/liveroom/queryByUserId",
                 "/liveroom/queryCountByUserId",
                 "/gift/**",
-                "/pay/**",
                 "/rune/**"
         ).order (1);
         //添加拦截器 refreshToken

@@ -26,7 +26,7 @@ public class Alipay {
                 aliPayConfig.getSignType ());
         //设置请求参数
         AlipayTradePagePayRequest alipayRequest=new AlipayTradePagePayRequest ();
-        alipayRequest.setReturnUrl (aliPayConfig.getReturnRuneOrderUrl ());
+        alipayRequest.setReturnUrl (aliPayConfig.getReturnUrl ());
         alipayRequest.setNotifyUrl (aliPayConfig.getNotifyUrl ());
         //商品描述(可空)
         String body="";

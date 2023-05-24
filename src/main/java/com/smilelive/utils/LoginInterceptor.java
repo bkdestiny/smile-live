@@ -15,9 +15,8 @@ public class LoginInterceptor implements HandlerInterceptor {
         //查看ThreadLocal中是否有用户
         User user =UserHolder.getUser ();
         if(user==null){
-            //没有用户,拦截
+            //没有用户,拦截,响应失败 返回301状态码
             response.setStatus (301);
-            log.info ("301->{}",request.getSession ().getId ());
             return false;
         }
         //放行

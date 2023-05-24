@@ -1,6 +1,8 @@
 package com.smilelive.service.impl;
 
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.smilelive.config.RabbitMqConfig;
 import com.smilelive.entity.RuneOrder;
 import com.smilelive.entity.User;
 import com.smilelive.mapper.RuneOrderMapper;
@@ -13,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.RedisClient;
+import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -21,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -35,7 +40,10 @@ public class RuneOrderServiceImpl extends ServiceImpl<RuneOrderMapper, RuneOrder
     @Resource
     private StringRedisTemplate stringRedisTemplate;
     @Resource
+    private AmqpTemplate amqpTemplate;
+    @Resource
     private RedissonClient redissonClient;
+    //创建订单,status:未支付
     @Override
     public RuneOrder createOrder(Long userId, Float total_amount, Integer rune,Integer payType) {
         RuneOrder runeOrder = new RuneOrder ();
@@ -63,35 +71,55 @@ public class RuneOrderServiceImpl extends ServiceImpl<RuneOrderMapper, RuneOrder
         if(!save){
             return null;
         }
+        //发送消息给延迟队列 实现超时未支付 过期时间:15分钟
+        amqpTemplate.convertAndSend (RabbitMqConfig.RUNE_ORDER_DELAYED_EXCHANGE,
+                RabbitMqConfig.RUNE_ORDER_DELAYED_ROUTING_KEY,
+                JSONUtil.toJsonStr (runeOrder).getBytes(StandardCharsets.UTF_8),
+                msg->{
+            msg.getMessageProperties ().setDelay (15*60*1000);
+            return msg;
+        });
         return runeOrder;
     }
-
+    //支付订单后完成的业务
     @Override
-    public String payedOrder(String orderNo){
+    public void payedOrder(String orderNo){
         String lockKey= RedisContent.LOCK_RUNE_KEY+orderNo;
         RLock lock = redissonClient.getLock (lockKey);
         try {
-            //尝试获取锁
+            /**
+            * 尝试获取锁
+             * 1.尝试获取锁的时间
+             * 2.锁的过期时间，防止死锁
+             * 3.时间单位 秒
+            * */
             boolean isLock = lock.tryLock (2, RedisContent.LOCK_RUNE_TTL, TimeUnit.SECONDS);
             if (!isLock) {
-                //获取锁失败
-                return "error";
+                //获取锁失败，更新订单信息为已支付 2
+                throw new Exception ();
             }
             //调用代理对象完成业务
             RuneOrderService proxy = (RuneOrderService) AopContext.currentProxy ();
             proxy.completeOrder (orderNo);
-            return "success";
         }catch (Exception e){
-            return "error";
+            //报错，更新订单信息为已支付
+            update ().eq ("out_trade_no",orderNo).
+                    set ("status",2)
+                    .set ("pay_time",LocalDateTime.now ()).update ();
         }finally {
             //释放锁
             lock.unlock ();
         }
     }
+    //事务 更新用户钱包和更新订单业务
     @Transactional
     public void completeOrder(String orderNo) throws SQLException {
         //获取订单信息
         RuneOrder order = query ().eq ("out_trade_no", orderNo).one ();
+        if(order.getStatus ()>=3){
+            //订单状态为已核销 或 已过期
+            return;
+        }
         //获取充值卢恩额度
         int rune=order.getRune ();
         //获取用户ID
@@ -106,13 +134,17 @@ public class RuneOrderServiceImpl extends ServiceImpl<RuneOrderMapper, RuneOrder
             //更新失败，抛出异常
             throw new SQLException ();
         }
-        //设置 3 已核销
-        order.setStatus (3);
-        //设置核销时间
-        order.setUseTime (LocalDateTime.now ());
+        LocalDateTime time=LocalDateTime.now ();
         //更新订单信息
-        boolean orderUpdate = update ().update (order);
+        boolean orderUpdate =
+                update ().
+                eq ("out_trade_no",orderNo).
+                //3 已核销
+                set ("status",3).
+                set("pay_time",time).
+                set ("use_time",time).update ();
         if(!orderUpdate){
+            //订单信息更新失败，抛出异常
             throw new SQLException ();
         }
     }

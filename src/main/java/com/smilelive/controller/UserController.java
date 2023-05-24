@@ -46,7 +46,6 @@ public class UserController {
     }
     @GetMapping("loginCaptcha")
     public void loginCaptcha(HttpServletRequest req,HttpServletResponse resp) throws Exception {
-        log.info("sessionId-->{}",req.getSession ().getId ());
         userService.loginCaptcha(req,resp);
     }
 }

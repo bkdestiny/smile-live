@@ -59,7 +59,7 @@ public class CacheClient {
         R r=dbFallback.apply (id);
         if(r==null){
             //不存在,将空值写入redis
-            stringRedisTemplate.opsForValue ().set (key,"",time,unit);
+            stringRedisTemplate.opsForValue ().set (key,"",5L,TimeUnit.MINUTES);
             //返回错误信息
             return null;
         }

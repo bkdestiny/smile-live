@@ -19,6 +19,6 @@ public class AliPayConfig {
     private String format;
     private String signType;
     private String notifyUrl;
-    private String returnRuneOrderUrl;
+    private String returnUrl;
 
 }

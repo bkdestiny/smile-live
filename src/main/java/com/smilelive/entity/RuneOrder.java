@@ -3,11 +3,14 @@ package com.smilelive.entity;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.smilelive.dto.Order;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 @Data
 @TableName(value = "rune_order")
+@NoArgsConstructor
 public class RuneOrder extends Order {
     /**
     * 数据库id
@@ -25,7 +28,7 @@ public class RuneOrder extends Order {
      * 超时时间参数
     * */
     @TableField(exist = false)
-    private String timeout_express="10m";
+    private String timeout_express="15m";
     /**
     * 产品编号
     * */
@@ -50,7 +53,7 @@ public class RuneOrder extends Order {
     private Integer payType;
 
     /**
-     * 订单状态，1：未支付；2：已支付；3：已核销；4：已取消；5：退款中；6：已退款
+     * 订单状态，1：未支付；2：已支付；3：已核销；4：已取消；5.已过期
      */
     private Integer status;
 
@@ -70,12 +73,11 @@ public class RuneOrder extends Order {
     private LocalDateTime useTime;
 
     /**
-     * 退款时间
-     */
-    private LocalDateTime refundTime;
-
-    /**
      * 更新时间
      */
     private LocalDateTime updateTime;
+
+    public RuneOrder(String out_trade_no) {
+        this.out_trade_no = out_trade_no;
+    }
 }

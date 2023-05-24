@@ -20,7 +20,6 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
     }
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        log.info("RefreshToken");
         //1.从请求头authorization获取token
         String token=request.getHeader ("authorization");
         //判断token是否为空
@@ -28,8 +27,8 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
             //空，放行
             return true;
         }
-        String key=RedisContent.TOKEN_KEY+token;
         //不为空，从redis查询用户是否存在
+        String key=RedisContent.TOKEN_KEY+token;
         String json=stringRedisTemplate.opsForValue ().get (key);
         User user= JSONUtil.toBean (json,User.class);
         if(user==null){

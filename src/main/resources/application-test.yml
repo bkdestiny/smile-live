@@ -24,10 +24,10 @@ spring:
 
     ##rabbitmq配置
   rabbitmq:
-      host: 192.168.88.130
-      port: 5672
-      username: admin
-      password: 123456
+    host: 192.168.88.130
+    port: 5672
+    username: admin
+    password: 123456
 
 
   ##定时任务相关配置

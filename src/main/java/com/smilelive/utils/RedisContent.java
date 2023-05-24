@@ -1,6 +1,7 @@
 package com.smilelive.utils;
 
 public class RedisContent {
+    /*用户校验*/
     public static final String TOKEN_KEY="sl:token:";
     public static final Long TOKEN_TTL=7L;
     public static final Long TRYLOCK_TTL=10L;
@@ -13,6 +14,6 @@ public class RedisContent {
     /*分布式锁*/
     public static final String LOCK_RUNE_KEY="sl:lock:rune:";
     public static final Long LOCK_RUNE_TTL=3L;
-
+    /*赠送礼物排行榜*/
     public static final String GIFT_RANKING_KEY="sl:gift:ranking:";
 }

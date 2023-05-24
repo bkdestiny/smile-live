@@ -9,6 +9,6 @@ import java.sql.SQLException;
 
 public interface RuneOrderService extends IService<RuneOrder> {
     RuneOrder createOrder(Long userId,Float total_amount,Integer rune,Integer payType);
-    String payedOrder(String orderNo) throws InterruptedException;
+    void payedOrder(String orderNo) throws InterruptedException;
     void completeOrder(String orderNo) throws SQLException;
 }
